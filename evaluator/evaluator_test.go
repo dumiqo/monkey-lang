@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"fmt"
 	"monkey-lang/lexer"
 	"monkey-lang/object"
 	"monkey-lang/parser"
@@ -31,7 +32,7 @@ func TestEvalIntegerExpression(t *testing.T) {
 
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
-		testIntegerObject(t, evaluated, tt.expected)
+		testINTEGER_OBJect(t, evaluated, tt.expected)
 	}
 }
 
@@ -63,7 +64,7 @@ func TestEvalBooleanExpression(t *testing.T) {
 
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
-		testBooleanObject(t, evaluated, tt.expected)
+		testBOOLEAN_OBJect(t, evaluated, tt.expected)
 	}
 }
 
@@ -82,7 +83,7 @@ func TestBangOperator(t *testing.T) {
 
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
-		testBooleanObject(t, evaluated, tt.expected)
+		testBOOLEAN_OBJect(t, evaluated, tt.expected)
 	}
 }
 
@@ -104,7 +105,7 @@ func TestIfElseExpressions(t *testing.T) {
 		evaluated := testEval(tt.input)
 		integer, ok := tt.expected.(int)
 		if ok {
-			testIntegerObject(t, evaluated, int64(integer))
+			testINTEGER_OBJect(t, evaluated, int64(integer))
 		} else {
 			testNullObject(t, evaluated)
 		}
@@ -133,7 +134,41 @@ func TestReturnStatements(t *testing.T) {
 
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
-		testIntegerObject(t, evaluated, tt.expected)
+		testINTEGER_OBJect(t, evaluated, tt.expected)
+	}
+}
+func TestErrorHandling(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedMessage string
+	}{
+		{"5 + true;", fmt.Sprintf("%s: %s + %s", typeMissMatchError, object.INTEGER_OBJ, object.BOOLEAN_OBJ)},
+		{"5 + true; 5;", fmt.Sprintf("%s: %s + %s", typeMissMatchError, object.INTEGER_OBJ, object.BOOLEAN_OBJ)},
+		{"-true", fmt.Sprintf("%s: -%s", unknownOperatorError, object.BOOLEAN_OBJ)},
+		{"true + false", fmt.Sprintf("%s: %s + %s", unknownOperatorError, object.BOOLEAN_OBJ, object.BOOLEAN_OBJ)},
+		{"5; true + false; 5", fmt.Sprintf("%s: %s + %s", unknownOperatorError, object.BOOLEAN_OBJ, object.BOOLEAN_OBJ)},
+		{"if (10 > 1) { true + false; }", fmt.Sprintf("%s: %s + %s", unknownOperatorError, object.BOOLEAN_OBJ, object.BOOLEAN_OBJ)},
+		{`
+			if (10 > 1) {
+				if (10 > 1) {
+					return true + false;
+				}
+			}
+		`, fmt.Sprintf("%s: %s + %s", unknownOperatorError, object.BOOLEAN_OBJ, object.BOOLEAN_OBJ)},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+
+		errObj, ok := evaluated.(*object.Error)
+		if !ok {
+			t.Errorf("no error object returned. got=%T (%+v)", evaluated, evaluated)
+			continue
+		}
+
+		if errObj.Message != tt.expectedMessage {
+			t.Errorf("wrong error message. expected=%q, got=%q", tt.expectedMessage, errObj.Message)
+		}
 	}
 }
 
@@ -145,7 +180,7 @@ func testEval(input string) object.Object {
 	return Eval(program)
 }
 
-func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
+func testINTEGER_OBJect(t *testing.T, obj object.Object, expected int64) bool {
 	result, ok := obj.(*object.Integer)
 	if !ok {
 		t.Errorf("object is not Integer. got=%T (%+V)", obj, obj)
@@ -159,7 +194,7 @@ func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 	return true
 }
 
-func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
+func testBOOLEAN_OBJect(t *testing.T, obj object.Object, expected bool) bool {
 	result, ok := obj.(*object.Boolean)
 	if !ok {
 		t.Errorf("object is not Boolean. got=%T (%+v)", obj, obj)
