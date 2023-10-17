@@ -32,7 +32,7 @@ func TestEvalIntegerExpression(t *testing.T) {
 
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
-		testINTEGER_OBJect(t, evaluated, tt.expected)
+		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
 
@@ -64,7 +64,7 @@ func TestEvalBooleanExpression(t *testing.T) {
 
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
-		testBOOLEAN_OBJect(t, evaluated, tt.expected)
+		testBooleanObject(t, evaluated, tt.expected)
 	}
 }
 
@@ -83,7 +83,7 @@ func TestBangOperator(t *testing.T) {
 
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
-		testBOOLEAN_OBJect(t, evaluated, tt.expected)
+		testBooleanObject(t, evaluated, tt.expected)
 	}
 }
 
@@ -105,7 +105,7 @@ func TestIfElseExpressions(t *testing.T) {
 		evaluated := testEval(tt.input)
 		integer, ok := tt.expected.(int)
 		if ok {
-			testINTEGER_OBJect(t, evaluated, int64(integer))
+			testIntegerObject(t, evaluated, int64(integer))
 		} else {
 			testNullObject(t, evaluated)
 		}
@@ -134,7 +134,7 @@ func TestReturnStatements(t *testing.T) {
 
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
-		testINTEGER_OBJect(t, evaluated, tt.expected)
+		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
 func TestErrorHandling(t *testing.T) {
@@ -155,6 +155,7 @@ func TestErrorHandling(t *testing.T) {
 				}
 			}
 		`, fmt.Sprintf("%s: %s + %s", unknownOperatorError, object.BOOLEAN_OBJ, object.BOOLEAN_OBJ)},
+		{"foobar", fmt.Sprintf("%s: %s", identifierNotFoundError, "foobar")},
 	}
 
 	for _, tt := range tests {
@@ -172,15 +173,33 @@ func TestErrorHandling(t *testing.T) {
 	}
 }
 
+func TestLetStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"let a = 5; a;", 5},
+		{"let a = 5 * 5; a;", 25},
+		{"let a = 5; let b = a; b;", 5},
+		{"let a = 5; let b = a; let c = a + b + 5; c;", 15},
+	}
+
+	for _, tt := range tests {
+		testIntegerObject(t, testEval(tt.input), tt.expected)
+	}
+
+}
+
 func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
 	program := p.ParseProgram()
+	env := object.NewEnviroment()
 
-	return Eval(program)
+	return Eval(program, env)
 }
 
-func testINTEGER_OBJect(t *testing.T, obj object.Object, expected int64) bool {
+func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 	result, ok := obj.(*object.Integer)
 	if !ok {
 		t.Errorf("object is not Integer. got=%T (%+V)", obj, obj)
@@ -194,7 +213,7 @@ func testINTEGER_OBJect(t *testing.T, obj object.Object, expected int64) bool {
 	return true
 }
 
-func testBOOLEAN_OBJect(t *testing.T, obj object.Object, expected bool) bool {
+func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
 	result, ok := obj.(*object.Boolean)
 	if !ok {
 		t.Errorf("object is not Boolean. got=%T (%+v)", obj, obj)
