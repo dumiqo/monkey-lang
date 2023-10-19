@@ -53,9 +53,74 @@ func (vm *VM) Run() error {
 
 			result := leftValue + rightValue
 			vm.push(&object.Integer{Value: result})
+		case code.OpSub:
+			right := vm.pop()
+			left := vm.pop()
+			rightValue := right.(*object.Integer).Value
+			leftValue := left.(*object.Integer).Value
+
+			result := leftValue - rightValue
+			vm.push(&object.Integer{Value: result})
+		case code.OpMul:
+			right := vm.pop()
+			left := vm.pop()
+			rightValue := right.(*object.Integer).Value
+			leftValue := left.(*object.Integer).Value
+
+			result := leftValue * rightValue
+			vm.push(&object.Integer{Value: result})
+		case code.OpDiv:
+			right := vm.pop()
+			left := vm.pop()
+			rightValue := right.(*object.Integer).Value
+			leftValue := left.(*object.Integer).Value
+
+			result := leftValue / rightValue
+			vm.push(&object.Integer{Value: result})
+		case code.OpPop:
+			vm.pop()
 		}
 	}
 	return nil
+}
+
+func (vm *VM) LastPoppedStackElem() object.Object {
+	return vm.stack[vm.sp]
+}
+
+func (vm *VM) executeBinaryOperation(op code.Opcode) error {
+
+	right := vm.pop()
+	left := vm.pop()
+
+	leftType := left.Type()
+	rightType := right.Type()
+
+	if leftType == object.INTEGER_OBJ && rightType == object.INTEGER_OBJ {
+		return vm.executeBinaryIntegerOperation(op, left, right)
+	}
+
+	return fmt.Errorf("unsupported type for binary operation: %s %s", leftType, rightType)
+}
+
+func (vm *VM) executeBinaryIntegerOperation(op code.Opcode, left, right object.Object) error {
+	var result int64
+
+	leftValue := left.(*object.Integer).Value
+	rightValue := right.(*object.Integer).Value
+	switch op {
+	case code.OpAdd:
+		result = leftValue + rightValue
+	case code.OpSub:
+		result = leftValue - rightValue
+	case code.OpMul:
+		result = leftValue * rightValue
+	case code.OpDiv:
+		result = leftValue / rightValue
+	default:
+		return fmt.Errorf("unknow integer operator: %d", op)
+	}
+	return vm.push(&object.Integer{Value: result})
 }
 
 func (vm *VM) push(o object.Object) error {
