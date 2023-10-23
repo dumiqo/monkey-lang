@@ -44,6 +44,10 @@ func Start(in io.Reader, out io.Writer) {
 			fmt.Fprintf(out, "Woops! Compilation fialed:\n %s\n", err)
 			continue
 		}
+
+		code := comp.Bytecode()
+		constants = code.Constants
+
 		machine := vm.NewWithGlobalsStore(comp.Bytecode(), globals)
 		err = machine.Run()
 
