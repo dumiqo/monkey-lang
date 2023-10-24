@@ -141,6 +141,54 @@ func TestConditionals(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestFunctionsWithoutRetrunValue(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			input: `
+			let noReturn = fn() { };
+			noReturn();
+			`,
+			expected: Null,
+		},
+		{
+			input: `
+			let noReturn = fn() { };
+			let noReturnTwo = fn() { noReturn(); };
+			noReturn();
+			noReturnTwo();
+			`,
+			expected: Null,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestFirstClassFunctions(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			input: `
+			let returnsOne = fn() { 1; };
+			let returnsOneReturner = fn() { returnsOne; };
+			returnsOneReturner()();
+			`,
+			expected: 1,
+		},
+		{
+			input: `
+			let returnsOneReturner = fn() {
+				let returnsOne = fn() { 1; };
+				returnsOne;
+			};
+			returnsOneReturner()();
+			`,
+			expected: 1,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
 func TestGlobalLetStatements(t *testing.T) {
 	tests := []vmTestCase{
 		{"let one = 1; one", 1},
@@ -233,6 +281,58 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 
 		testExpectedObject(t, tt.expected, stackElem)
 	}
+}
+
+func TestCallingFunctionsWithBindings(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			input: `
+			let one = fn() { let one = 1; one };
+			one();
+			`,
+			expected: 1,
+		},
+		{
+			input: `
+			let oneAndTwo = fn() { let one = 1; let two = 2; one + two; };
+			oneAndTwo();
+			`,
+			expected: 3,
+		},
+		{
+			input: `
+			let oneAndTwo = fn() { let one = 1; let two = 2; one + two; };
+			let threeAndFour = fn() { let three = 3; let four = 4; three + four; };
+			oneAndTwo() + threeAndFour();
+			`,
+			expected: 10,
+		},
+		{
+			input: `
+			let firstFoobar = fn() { let foobar = 50; foobar; };
+			let secondFoobar = fn() { let foobar = 100; foobar; };
+			firstFoobar() + secondFoobar();
+			`,
+			expected: 150,
+		},
+		{
+			input: `
+			let globalSeed = 50;
+			let minusOne = fn() {
+				let num = 1;
+				globalSeed - num;
+			}
+			let minusTwo = fn() {
+				let num = 2;
+				globalSeed - num;
+			}
+			minusOne() + minusTwo();
+			`,
+			expected: 97,
+		},
+	}
+
+	runVmTests(t, tests)
 }
 
 func testExpectedObject(t *testing.T, expected interface{}, actual object.Object) {

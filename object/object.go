@@ -154,6 +154,7 @@ func (a *Array) Type() ObjectType {
 
 type CompiledFunction struct {
 	Instructions code.Instructions
+	NumLocals    int
 }
 
 func (cf *CompiledFunction) Inspect() string {
