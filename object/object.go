@@ -121,12 +121,12 @@ func (s *String) Type() ObjectType {
 
 type BuiltinFunction func(args ...Object) Object
 
-type Builin struct {
+type Builtin struct {
 	Fn BuiltinFunction
 }
 
-func (b *Builin) Inspect() string { return "builtin function" }
-func (b *Builin) Type() ObjectType {
+func (b *Builtin) Inspect() string { return "builtin function" }
+func (b *Builtin) Type() ObjectType {
 	return BUILTIN_OBJ
 }
 

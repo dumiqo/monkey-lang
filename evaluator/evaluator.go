@@ -19,6 +19,15 @@ var (
 	FALSE = &object.Boolean{Value: false}
 )
 
+var builtins = map[string]*object.Builtin{
+	"len":   object.GetBuiltinByName("len"),
+	"first": object.GetBuiltinByName("first"),
+	"last":  object.GetBuiltinByName("last"),
+	"rest":  object.GetBuiltinByName("rest"),
+	"push":  object.GetBuiltinByName("push"),
+	"puts":  object.GetBuiltinByName("puts"),
+}
+
 func Eval(node ast.Node, env *object.Enviroment) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
@@ -296,7 +305,7 @@ func evalIdentifier(node *ast.Identifier, env *object.Enviroment) object.Object 
 	if val, ok := env.Get(node.Value); ok {
 		return val
 	}
-	if builtin, ok := builds[node.Value]; ok {
+	if builtin, ok := builtins[node.Value]; ok {
 		return builtin
 	}
 	return newError("%s: %s", identifierNotFoundError, node.Value)
@@ -360,8 +369,11 @@ func applyFunction(fn object.Object, args []object.Object) object.Object {
 		extendedEnv := extendedFunctionEnv(fn, args)
 		evaluated := Eval(fn.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
-	case *object.Builin:
-		return fn.Fn(args...)
+	case *object.Builtin:
+		if result := fn.Fn(args...); result != nil {
+			return result
+		}
+		return NULL
 	default:
 		return newError("%s: %s", notFunctionError, fn.Type())
 	}
