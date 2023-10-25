@@ -512,7 +512,7 @@ func (vm *VM) pushClosure(constIndex, numFree int) error {
 
 	free := make([]object.Object, numFree)
 	for i := 0; i < numFree; i++ {
-		free[i] = vm.stack[vm.sp-numFree+1]
+		free[i] = vm.stack[vm.sp-numFree+i]
 	}
 	vm.sp = vm.sp - numFree
 	closure := &object.Closure{Fn: function, Free: free}
