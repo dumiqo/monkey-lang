@@ -1,12 +1,12 @@
 package object
 
-func NewEnviroment() *Enviroment {
+func NewEnvironment() *Enviroment {
 	s := make(map[string]Object)
 	return &Enviroment{store: s, outer: nil}
 }
 
-func NewEncosedEnviroment(out *Enviroment) *Enviroment {
-	env := NewEnviroment()
+func NewEncosedEnvironment(out *Enviroment) *Enviroment {
+	env := NewEnvironment()
 	env.outer = out
 	return env
 }

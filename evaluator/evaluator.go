@@ -380,7 +380,7 @@ func applyFunction(fn object.Object, args []object.Object) object.Object {
 }
 
 func extendedFunctionEnv(fn *object.Function, args []object.Object) *object.Enviroment {
-	env := object.NewEncosedEnviroment(fn.Env)
+	env := object.NewEncosedEnvironment(fn.Env)
 
 	for paramIdx, param := range fn.Parameters {
 		env.Set(param.Value, args[paramIdx])
